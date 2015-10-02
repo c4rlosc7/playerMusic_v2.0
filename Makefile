@@ -3,7 +3,7 @@
 ZMQDIR = /home/local/zmq
 
 CC=clang++ -std=c++11 -Wall 
-LDFLAGS= -lpthread -lzmqpp -lzmq -I$(ZMQDIR)/include -L$(ZMQDIR)/lib 
+LDFLAGS= -lpthread -lzmqpp -lzmq -I$(ZMQDIR)/include -L$(ZMQDIR)/lib -lsfml-audio
 
 all: client broker server
 
