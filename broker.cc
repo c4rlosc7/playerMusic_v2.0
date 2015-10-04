@@ -16,29 +16,26 @@ int main(int argc, char **argv)
   	context ctx;
   	socket cb(ctx, socket_type::xrep);  // socket cliente-broker  
   	cb.bind("tcp://*:5555");
-  	poller p;
-  	p.add(cb, poller::poll_in);
-  	queue<string> queue_request;
+  	//queue<int> queue_request;
   	int count=0;
   	message cbroker;
-  	string idc, c, key;
+  	string idc;
+  	int c;
   	while(true)
   	{
 	  	//message cbroker;                  // recibe del cliente
 		cb.receive(cbroker);
 		cout << "recibe" << cbroker.parts() << "partes" << endl;
-		cbroker >> idc >> c >> key;
-					
-		queue_request.push(key);
-		cout << "length: " << queue_request.size() << endl;
-
+		cbroker >> idc >> c;				
+		message bserver;               // envia al servidor	
+		bserver << idc << c;
+		if (c == 2){int index; cbroker >> index; bserver << index;}
+		//queue_request.push(c);
+		//cout << "length: " << queue_request.size() << endl;
 		for(size_t i = 0; i < cbroker.parts(); i++) 
 		{
 			cout << i << cbroker.get(i) << endl;
-		}	  								
-	  			
-		message bserver;               // envia al servidor
-		bserver << idc << c << key;
+		}	  									  						
 		//bserver << text;
 		cout << "envio" << bserver.parts() << "partes" << endl;
 		for(size_t ii = 0; ii < bserver.parts(); ii++) {

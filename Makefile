@@ -17,4 +17,4 @@ server: server.cc
 	$(CC) -o server server.cc $(LDFLAGS)	
 	
 clean:
-	rm -f client broker server
+	rm -f client broker server	

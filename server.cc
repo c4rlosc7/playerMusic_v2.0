@@ -1,9 +1,10 @@
-//Carlos Andres Martinez - Cliente Broker Servidor
+//Carlos Andres Martinez - Cliente Servidor
 #include <iostream>  // std::cout
 #include <fstream>  //std::ifstream
 #include <string>
 #include <list>
 #include <cassert>
+#include <map>
 #include <zmqpp/zmqpp.hpp>
 using namespace std;
 using namespace zmqpp;
@@ -31,52 +32,39 @@ class song{
 			return filename; 
 		}				
 };
-
 /////////////////CLASS-PLAYLIST-OBJECT-// lista de canciones name, Metodo add,size
 class playlist{
 	private:
-		list <song> songs;  // lista de objetos de tipo song 
+		//list <song> songs;  // lista de objetos de tipo song 
+		map<int,song> songs;
 		string name;		
 	public:		
 		playlist(){}
 		playlist(const string &n){ 
 			name = n;
 		}		
-		void add(song s){ //Add element at the end
-		songs.push_back(s);
+
+		void add(song s, int indx){ //Add element at the end
+		songs[indx] = s;
 		}		
+
 		int size(){ // Returns the number of elements on list
 		return songs.size();
-		}				
-};
+		}
 
-/////////////////CLASS-PLAYER-OBJECT-// mylist Metodo addsong
-class player{
+		const string& getplaylist() const { 
+			return name; 
+		}
 
-	private:
-		list <song> all;
-		list <playlist> mylists; // lista de obj de tipo playlist 
-
-	public:
-		player(){}
-		list <song> find(string name){ //funcion de tipo list <song> llamada find() all songs
-			list <song> result;// create to mylist
-			for(const song& s: all){
-				auto p = s.getname().find(name); 	
-				//cout << s.getname() << endl;
-				if (p != string::npos){ 
-					result.push_back(s);					
-					//cout << s.getname() << endl;
-				}
-			}
-			return result;         // retorna la lista de las canciones con la similitud de la busqueda
+		song songtofind(int x){
+			song songtofind1;
+			map<int, song>::iterator it=songs.find(x); // buscar
+			songtofind1 = (*it).second;
+			return songtofind1;					
 		}		
-		//Add element at the end
-		void addsong(song s){ 
-			all.push_back(s);			
-		}	
-};
 
+		//map<int, song> listsongs(){ }
+};
 ////////////////////////////transfer to file 
 vector<char> ReadAllBytes(const string &filename)
 {
@@ -88,7 +76,6 @@ vector<char> ReadAllBytes(const string &filename)
     ifs.read(&result[0], pos); //how much to read 
     return result;
 }
-
 void filetomessage(const string &filename, message &r){
 	vector <char> bytes = ReadAllBytes(filename);
 	r.add_raw(bytes.data(), bytes.size());
@@ -100,7 +87,7 @@ int main(int argc, char **argv)
   ip = argv[1];
   port = argv[2];
   cout << "Running Servidor with ip: " << ip <<", port: " << port << endl;
-  
+
   song a("Milagro", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/0_Milagro.ogg"); 
   song b("Familia Es la Oportunidad", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/1_Familia_Es_la_Oportunidad_.ogg");
   song c("Los Que Marcan el Camino", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/2_Los_Que_Marcan_el_Camino.ogg");
@@ -108,81 +95,66 @@ int main(int argc, char **argv)
   song e("Loco Pro", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/4_Loco_Pro.ogg");
   song f("Dejar de Ser", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/5_Dejar_de_Ser.ogg");
   playlist rock("rock"); // playlist rock 
-  rock.add(a);   //adicionar obj tipo song a la lista rock
-  rock.add(b);
-  rock.add(c);
-  rock.add(d);
-  rock.add(e);
-  rock.add(f);
-  player p;    // lista de obj playlist p
-  p.addsong(a);
-  p.addsong(b);
-  p.addsong(c);
-  p.addsong(d);
-  p.addsong(e);
-  p.addsong(f);
+  rock.add(a,0);   //adicionar obj tipo song a la lista rock
+  rock.add(b,1);
+  rock.add(c,2);
+  rock.add(d,3);
+  rock.add(e,4);
+  rock.add(f,5);
+// Nombre del map, numero de elementos del map y los elementos del map
+  song nombre;  
+  int indice=0;
+  int longitud=rock.size();
 
   context ctx;
   socket sx(ctx, socket_type::xrep);         // socket broker-server  
   sx.bind("tcp://*:"+port);    
   socket sc(ctx, socket_type::xreq);         // socket servidor-cliente  5559 5560 5561
   sc.connect("tcp://"+ip+":6666");
-  while(true)  	
-  	{  	  		  	
-		message bserver;
-		sx.receive(bserver);
-		int operador;     // 1 buscar, 2 reproducir   
-		string idb, idc, key;        // id 
-		bserver >> idb >> idc >> operador >> key;		
-		//r >> operador;
-		message sclient;
 
+	while(true)
+	{ 
+		message r;
+		sx.receive(r);
+		for(size_t i = 0; i < r.parts(); i++) {
+			cout << r.get(i) << endl;
+		}
+		string idc, idb;        // id 
+		r >> idc >> idb;
+		int operador;     // 1 buscar, 2 reproducir   
+		r >> operador;
+		message scm;
 		if(operador == 1){             // 1 message [id,"lista",name-song]
-			//string wordtofind;
-			//r >> wordtofind;
-			list <song> s1 = p.find(key);				
-			sclient << idc;
-			sclient << "lista";
-			for(const song& ss: s1){
-				sclient << ss.getname();
-			}
-		  	int cap;  		  		
-		  	cap = s1.size();		
-		  	cout << "Canciones encontradas: " << cap << endl;  		  		
-		  	cout << "Partes: " << sclient.parts() << endl;
-		  	sc.send(sclient);
-		}else if(operador == 2){       // 2 message [id,"reproducir",namesong,string bytes]
-			//string word;
-			//r >> word;
-			list <song> s1 = p.find(key);				
-			sclient << idc;
-			sclient << "reproducir";
+			cout <<"play list name: " << rock.getplaylist() << " #element: " << rock.size() << endl;			
+			scm << idc;
+			scm << operador;
+			while(indice < longitud){
+  				nombre = rock.songtofind(indice);
+  				cout << "name song[" << indice <<"]: " << nombre.getname() << endl;
+  				scm << nombre.getname();
+  				indice++;
+  			}
+		  	cout << "Partes a enviar: " << scm.parts() << endl;
+		  	indice=0;
+		  	sc.send(scm);
+		}else if(operador == 2){       // 2 message [id,"reproducir",namesong,string bytes]			
+			int index;
+			r >> index;
+			nombre = rock.songtofind(index); // objeto encontrado 
+			string nombre_cancion;
+			nombre_cancion = nombre.getname(); // atributo nombre del objeto song
+			cout << "name song: " << nombre_cancion << endl;
+			scm << idc;
+			scm << operador;
+
 			string pathfile;
-			for(const song& ss: s1){
-				pathfile = ss.getfilename();
-				sclient << ss.getname();
-			}	
+			pathfile = nombre.getfilename();
+			scm << nombre_cancion;
 		  	cout << "ruta: " << pathfile << endl;  
-		  	filetomessage(pathfile, sclient);
-			sc.send(sclient);		  	
-		}		
-/*
-	    message bserver;                                        // recibe del broker
-	    sx.receive(bserver);
-	    cout << "recibe" << bserver.parts() << "partes" << endl;
-	    string idc, idb, text;
-	    bserver >> idc >> idb >> text;
-		for(size_t i = 0; i < bserver.parts(); i++) {
-			cout << i << bserver.get(i) << endl;
-		}		    	
-	    message sclient;                                         // envia al cliente
-	    sclient << idc << idb << text;	    
-	    cout << "envio" << sclient.parts() << "partes" << endl;
-		for(size_t ii = 0; ii < sclient.parts(); ii++) {
-			cout << ii << sclient.get(ii) << endl;
-		}	    
-	    sc.send(sclient);	    
-*/	    
-  	}
+		  	filetomessage(pathfile,scm);
+		  	cout << "partes envia: " << scm.parts() << endl;
+			sc.send(scm);		  	
+		}					
+  	}		
 	return 0;
 }
