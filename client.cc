@@ -52,6 +52,7 @@ while(true)
 		case 1: 			  	
   			cout << "Esperando respuesta...\n\n";
   			m << c;
+        m << ip;
   			cb.send(m);	                  
 			break;            // id, 1
 		case 2:                           
@@ -60,6 +61,7 @@ while(true)
 			cout << "Indice: ";				
 			cin >> index;
 			m << index;
+      m << ip;
 			cout << "Esperando respuesta...\n\n";			
 			cb.send(m);	      // id, 2
 			break;	

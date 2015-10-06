@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   	//queue<int> queue_request;
   	int count=0;
   	message cbroker;
-  	string idc;
+  	string idc,ipc;
   	int c;
   	while(true)
   	{
@@ -32,11 +32,14 @@ int main(int argc, char **argv)
 		if (c == 2){int index; cbroker >> index; bserver << index;}
 		//queue_request.push(c);
 		//cout << "length: " << queue_request.size() << endl;
+		cbroker >> ipc;
+		//cout << ipc << endl;
 		for(size_t i = 0; i < cbroker.parts(); i++) 
 		{
 			cout << i << cbroker.get(i) << endl;
 		}	  									  						
 		//bserver << text;
+		bserver << ipc;
 		cout << "envio" << bserver.parts() << "partes" << endl;
 		for(size_t ii = 0; ii < bserver.parts(); ii++) {
 			cout << ii << bserver.get(ii) << endl;
@@ -45,7 +48,7 @@ int main(int argc, char **argv)
 		if (count == 0){
 			socket sx(ctx, socket_type::xreq);  // socket (1) servidor-cliente  5559 5560 5561
 			sx.connect("tcp://"+ip+":5557");	
-			cout << "running server #1\n";    	
+			cout << "running server #1\n";    				
 			sx.send(bserver);
 			count = count + 1;
 		}else if (count == 1){

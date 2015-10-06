@@ -83,10 +83,9 @@ void filetomessage(const string &filename, message &r){
 
 int main(int argc, char **argv)
 {
-  string ip, port; 		
-  ip = argv[1];
-  port = argv[2];
-  cout << "Running Servidor with ip: " << ip <<", port: " << port << endl;
+  string port, ipc; 		
+  port = argv[1];
+  cout << "Running Servidor with ip: " << ipc <<", port: " << port << endl;
 
   song a("Milagro", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/0_Milagro.ogg"); 
   song b("Familia Es la Oportunidad", "A.N.I.M.A.L", "/home/carlos/Escritorio/musica/1_Familia_Es_la_Oportunidad_.ogg");
@@ -109,25 +108,30 @@ int main(int argc, char **argv)
   context ctx;
   socket sx(ctx, socket_type::xrep);         // socket broker-server  
   sx.bind("tcp://*:"+port);    
-  socket sc(ctx, socket_type::xreq);         // socket servidor-cliente  5559 5560 5561
-  sc.connect("tcp://"+ip+":6666");
-
+  int longitud_msg;
 	while(true)
 	{ 
 		message r;
 		sx.receive(r);
+		cout << "recibe" << r.parts() << "partes" << endl;
+		longitud_msg = r.parts();
 		for(size_t i = 0; i < r.parts(); i++) {
 			cout << r.get(i) << endl;
 		}
-		string idc, idb;        // id 
+		string idc, idb;        // id 		
 		r >> idc >> idb;
+		//cout << ipc << endl;
+		ipc = r.get(longitud_msg -1);
+		cout <<"ip cliente:"<< ipc <<endl;
 		int operador;     // 1 buscar, 2 reproducir   
 		r >> operador;
 		message scm;
+		//cout << idc << idb << operador << ipc << endl;
 		if(operador == 1){             // 1 message [id,"lista",name-song]
 			cout <<"play list name: " << rock.getplaylist() << " #element: " << rock.size() << endl;			
+			//r >> ipc;
 			scm << idc;
-			scm << operador;
+			scm << operador;			
 			while(indice < longitud){
   				nombre = rock.songtofind(indice);
   				cout << "name song[" << indice <<"]: " << nombre.getname() << endl;
@@ -136,10 +140,17 @@ int main(int argc, char **argv)
   			}
 		  	cout << "Partes a enviar: " << scm.parts() << endl;
 		  	indice=0;
+
+		  	socket sc(ctx, socket_type::xreq);         // socket servidor-cliente  5559 5560 5561
+  			sc.connect("tcp://"+ipc+":6666");
+
 		  	sc.send(scm);
 		}else if(operador == 2){       // 2 message [id,"reproducir",namesong,string bytes]			
+			//r >> ipc;
 			int index;
-			r >> index;
+			r >> index;			
+			//cout << idc << idb << operador << index << ipc << endl;
+			cout << "index:" << index <<endl;
 			nombre = rock.songtofind(index); // objeto encontrado 
 			string nombre_cancion;
 			nombre_cancion = nombre.getname(); // atributo nombre del objeto song
@@ -153,6 +164,10 @@ int main(int argc, char **argv)
 		  	cout << "ruta: " << pathfile << endl;  
 		  	filetomessage(pathfile,scm);
 		  	cout << "partes envia: " << scm.parts() << endl;
+
+			socket sc(ctx, socket_type::xreq);         // socket servidor-cliente  5559 5560 5561
+			sc.connect("tcp://"+ipc+":6666");		  	
+
 			sc.send(scm);		  	
 		}					
   	}		
