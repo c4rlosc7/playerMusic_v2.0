@@ -40,32 +40,33 @@ int main(int argc, char **argv){
   int c;
   string keyword;
   string keysong;
+  string ipc = "192.168.1.12";
   
   message m;                 // mensaje m
 while(true)
 {
-	cout << "-----------------CLIENT-MUSIC-PLAYER-----------------"	<< endl;
-	cout << "1.Buscar  2.Reproducir : ";
+	cout << "------------------MUSIC-PLAYER-----------------"	<< endl;
+	cout << "1.PlayList  2.Play : ";
 	cin >> c;
 	switch(c)
 	{
 		case 1: 			  	
-  			cout << "Esperando respuesta...\n\n";
+  			cout << "Wait...\n\n";
   			m << c;
-        m << ip;
+        	m << ipc;
   			cb.send(m);	                  
 			break;            // id, 1
 		case 2:                           
 			m << c;			
 			int index;
-			cout << "Indice: ";				
+			cout << "Index number: ";				
 			cin >> index;
 			m << index;
-      m << ip;
-			cout << "Esperando respuesta...\n\n";			
+      		m << ipc;
+			cout << "Wait...\n\n";			
 			cb.send(m);	      // id, 2
 			break;	
-		default: cout << "Ingrese opcion correcta";
+		default: cout << "Please try again";
     		break;															
 	}		
   message bserver;
